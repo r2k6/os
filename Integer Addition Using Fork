@@ -13,3 +13,24 @@ int main(int argc, char *argv[])
     printf("Sum = %d\n", sum);
     return 0;
 }
+
+Program 2 Using fork() and execvp() (forkexec.c)
+
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main()
+{
+    int pid;
+    pid = fork();
+    if(pid == 0){
+        char *args[] = {"./myadd", "5", "7", NULL};
+        execvp(args[0], args);
+    }
+    else{
+        wait(NULL);
+        printf("Child process completed\n");
+    }
+    return 0;
+}
