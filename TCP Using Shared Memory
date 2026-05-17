@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+
+#define SHM_SIZE 1024
+
+int main() {
+
+    int shmid;
+
+    char *shm;
+
+    key_t key = IPC_PRIVATE;
+
+    shmid = shmget(key, SHM_SIZE, IPC_CREAT | 0666);
+
+    if (shmid < 0) {
+
+        perror("shmget");
+
+        exit(1);
+    }
+
+    shm = (char *)shmat(shmid, NULL, 0);
+
+    if (shm == (char *) -1) {
+
+        perror("shmat");
+
+        exit(1);
+    }
+
+    if (fork() == 0) {
+
+       // -------- Child Process --------
+
+        char s1[100], s2[100], s3[100], result[300];
+
+        sscanf(shm, "%s %s %s", s1, s2, s3);
+
+        sprintf(result, "%s %s %s", s1, s2, s3);
+
+        strcpy(shm, result);
+
+        exit(0);
+    }
+
+    else {
+
+       // -------- Parent Process --------
+
+        char final[300];
+
+        int i;
+
+        sprintf(shm, "Hello S4 Students");
+
+        wait(NULL);
+
+        strcpy(final, shm);
+
+        for (i = 0; final[i] != '\0'; i++) {
+
+            if (islower(final[i]))
+
+                final[i] = toupper(final[i]);
+
+            else if (isupper(final[i]))
+
+                final[i] = tolower(final[i]);
+        }
+
+        printf("Final Output: %s\n", final);
+
+        shmdt(shm);
+
+        shmctl(shmid, IPC_RMID, NULL);
+    }
+
+    return 0;
+}
